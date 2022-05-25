@@ -1,7 +1,7 @@
 // LIBRERIA DISPLAY
 
 #include<LiquidCrystal.h>
-LiquidCrystal lcd (13,12,11,10,9,1);
+LiquidCrystal lcd (13,12,11,10,9,8);
 
 // DEFINIZIONE USCITE
 
