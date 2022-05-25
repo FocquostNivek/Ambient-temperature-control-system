@@ -1,0 +1,152 @@
+// LIBRERIA DISPLAY
+
+#include<LiquidCrystal.h>
+LiquidCrystal lcd (13,12,11,10,9,8);
+
+// DEFINIZIONE USCITE
+
+#define P2          5
+#define P1          3
+#define COLD        2
+#define HOT         4
+
+// DEFINIZIONI INGRESSI
+
+#define PIN_LM35    A0
+#define POT_HOT     A2
+#define POT_COLD    A4
+
+// VARIABILI ISTERESI
+
+float ISTERESI=0.5;
+
+// DDEFINIZIONI VARIABILI
+
+float TEMP, SENSORE;
+float T_HOT1, T_COLD1;
+float T_HOT2, T_COLD2;
+float TH, TC;
+
+// SETUP SIMBOLO (°)
+
+byte customChar[] = {
+    B00111,
+    B00101,
+    B00111,
+    B00000,
+    B00000,
+    B00000,
+    B00000,
+    B00000
+};
+  
+void setup()
+{
+    lcd.begin( 16,2 );
+    Serial.begin( 9600 );
+    lcd.createChar(0, customChar);
+    lcd.home();
+  
+// SETUP INGRESSI
+  
+    pinMode(P1,INPUT);
+    pinMode(P2,INPUT);
+  
+// SETUP USCITE
+  
+    pinMode(HOT,OUTPUT);
+    pinMode(COLD,OUTPUT);
+  
+// SETUP CONDIZIONI INIZIALE USCITE
+  
+    digitalWrite(HOT,LOW);
+    digitalWrite(COLD,LOW);
+  
+// SETUP CONDIZIONI INIZIALE INGRESSI
+  
+    T_HOT1 = analogRead(POT_HOT);
+    T_HOT2 = ((T_HOT1*5)/1023)*10;
+    TH = T_HOT2;
+  
+    T_COLD1=analogRead(POT_COLD);
+    T_COLD2 = ((T_COLD1*5)/1023)*10;
+    TC = T_COLD2;  
+}
+
+void loop(){
+  
+// LETTURA DATI INGESSI 
+  
+    SENSORE = analogRead(PIN_LM35);
+    T_HOT1 = analogRead(POT_HOT);  
+    T_COLD1=analogRead(POT_COLD);
+  
+// CONVERSIONE DATI INGRESSI IN TEMPERATUARA
+  
+    TEMP = ((SENSORE*5)/1023)*10;  
+    T_HOT2 = ((T_HOT1*5)/1023)*10;
+    T_COLD2 = ((T_COLD1*5)/1023)*10;
+  
+// SETUP PULSATI CON POTENZIOMETRO
+  
+  if ( digitalRead(P1) == LOW ) {
+    TH = T_HOT2;
+    lcd.clear();
+    lcd.setCursor( 0,0 );
+    lcd.print("POTENZIOMETRO H: ");
+    lcd.setCursor( 5,1 );
+    lcd.print( TH );
+    lcd.write(byte(0));
+    lcd.print("C");
+    delay( 500 );
+  }
+  
+  if ( digitalRead(P2) == LOW ){ 
+    TC = T_COLD2;
+    lcd.clear();
+    lcd.setCursor( 0,0 );
+    lcd.print("POTENZIOMETRO C: ");
+    lcd.setCursor( 5,1 );
+    lcd.print( TC );
+    lcd.write(byte(0));
+    lcd.print("C");
+    delay( 500 );
+    
+  }
+  
+// CONTROLLO DELLE USCITE CON ISTERESI
+  
+   
+  if ( TEMP >= (TH + ISTERESI) ){    
+    digitalWrite(COLD,HIGH);
+    lcd.setCursor(0, 1);
+    lcd.print("RAF=ON ");
+  }
+  
+  if ( TEMP <= (TH - ISTERESI) ){
+    digitalWrite(COLD,LOW);
+    lcd.setCursor(0,1);
+    lcd.print("RAF=OFF");
+  }
+  
+  if ( (TC + ISTERESI) <= TEMP ){
+    digitalWrite(HOT,LOW);
+    lcd.setCursor(8,1);
+    lcd.print("RISC=OFF");
+  }
+  
+  if ( TEMP <= (TC - ISTERESI) ){
+    digitalWrite(HOT,HIGH);
+    lcd.setCursor(8, 1);
+    lcd.print("RISC=ON ");
+  }
+      
+// SETUP DISPLAY
+  
+    lcd.setCursor(0,0);  
+    lcd.print("TEMP =  ");  
+    lcd.print(TEMP);  
+    lcd.write(byte(0));  
+    lcd.print("C");  
+  
+}
